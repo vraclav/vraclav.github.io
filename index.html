@@ -469,8 +469,7 @@
   // KONFIGURACE
   // ============================================================
   const FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSeLQ8SlUt9tZTSCq7qrz9aAPC1a0CkpMdR9BXVs3jkGEDJBtg/formResponse";
-  const ENTRY_TIME = "entry.1682154569";     // ID otázky "Vyberte čas"
-  const ENTRY_LOCATION = "entry.341589083";  // ID otázky "Vyberte lokalitu"
+  const ENTRY_MULTICHOICE = "entry.341589083"
   // ============================================================
 
   const cardEls = Array.from(document.querySelectorAll(".card"));
@@ -487,7 +486,7 @@
     const ynButtons = card.querySelectorAll(".yn-btn");
     const timeWrap = card.querySelector(".card-time");
     const timeButtons = card.querySelectorAll(".card-time-btn");
-    const subText = card.querySelector(".card-sub");
+    const subText = card.querySelector(".card-sub"); // Zde chyběl ve vašem HTML element .card-sub, doporučuji ho přidat, nebo tento řádek smazat
 
     ynButtons.forEach(btn => {
       btn.addEventListener("click", () => {
@@ -498,9 +497,10 @@
         state[idx].choice = btn.dataset.choice;
         const isYes = state[idx].choice === "yes";
         timeWrap.hidden = !isYes;
-        subText.textContent = isYes
-          ? `Vybráno · ${state[idx].time}`
-          : "Nehlasujete pro toto místo";
+        
+        if(subText) {
+            subText.textContent = isYes ? `Vybráno · ${state[idx].time}` : "Nehlasujete pro toto místo";
+        }
 
         validate();
       });
@@ -511,7 +511,10 @@
         timeButtons.forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         state[idx].time = btn.dataset.time;
-        subText.textContent = `Vybráno · ${state[idx].time}`;
+        
+        if(subText) {
+            subText.textContent = `Vybráno · ${state[idx].time}`;
+        }
         validate();
       });
     });
@@ -532,15 +535,24 @@
   }
 
   submitBtn.addEventListener("click", () => {
+    const chosenValues = [];
     const chosenSummaries = [];
 
     cardEls.forEach((card, idx) => {
       const s = state[idx];
       if (s.choice === "yes") {
-        submitVote(s.time, card.dataset.formValue);
+        // Generování formátu ba1430, ds1500 atd.
+        const prefix = card.dataset.location.includes("Barokní") ? "ba" : "ds";
+        const timeCode = s.time.replace(":", ""); // odstraní dvojtečku: "14:30" -> "1430"
+        const finalValue = prefix + timeCode;
+
+        chosenValues.push(finalValue);
         chosenSummaries.push(`${card.dataset.location} · ${s.time}`);
       }
     });
+
+    // Odeslání všech vybraných hodnot najednou
+    submitVote(chosenValues);
 
     cardsWrap.style.display = "none";
     submitArea.style.display = "none";
@@ -548,22 +560,30 @@
     thankyou.classList.add("visible");
   });
 
-  function submitVote(time, location) {
+  function submitVote(values) {
     const form = document.createElement("form");
     form.action = FORM_ACTION_URL;
     form.method = "POST";
     form.target = "hidden_iframe";
     form.style.display = "none";
 
-    const fields = {
-      [ENTRY_TIME]: time,
-      [ENTRY_LOCATION]: location,
+    // Pro multichoice otázku vytvoříme input pro každou zvolenou variantu
+    // Všechny musí mít stejný 'name' (ID otázky)
+    values.forEach(val => {
+      const input = document.createElement("input");
+      input.name = ENTRY_MULTICHOICE;
+      input.value = val;
+      form.appendChild(input);
+    });
+
+    // Skrytá pole vyžadovaná Google Formuláři
+    const metaFields = {
       "fvv": "1",
       "pageHistory": "0",
       "fbzx": String(Date.now())
     };
 
-    Object.entries(fields).forEach(([name, value]) => {
+    Object.entries(metaFields).forEach(([name, value]) => {
       const input = document.createElement("input");
       input.name = name;
       input.value = value;
