@@ -8,6 +8,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,600&family=Sora:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="preload" as="image" href="img/background.webp" fetchpriority="high">
+<link rel="preload" as="image" href="img/barokni_areal.webp">
+<link rel="preload" as="image" href="img/detske_skupiny.webp">
 
 <style>
   :root {
@@ -129,6 +132,7 @@
     height: 380px;
     border-radius: var(--radius);
     overflow: hidden;
+    contain: layout paint;
   }
 
   .card-photo {
@@ -242,14 +246,16 @@
     appearance: none;
     border: none;
     background: transparent;
-    width: 34px;
-    height: 34px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: background 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease;
   }
 
   .yn-btn svg { width: 15px; height: 15px; }
@@ -276,14 +282,16 @@
     appearance: none;
     border: none;
     background: transparent;
-    padding: 7px 14px;
+    padding: 9px 14px;
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     font-weight: 600;
     color: var(--ink-soft);
     border-radius: 999px;
     cursor: pointer;
-    transition: background 0.2s ease, color 0.2s ease;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   .card-time-btn.active {
@@ -460,9 +468,6 @@
   </div>
 </div>
 
-<!-- Skrytý iframe jako cíl odeslání formuláře, aby nedošlo k přesměrování stránky -->
-<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
-
 <script>
   // ============================================================
   // KONFIGURACE
@@ -551,7 +556,7 @@
     submitBtn.disabled = !valid;
   }
 
-  submitBtn.addEventListener("click", () => {
+  submitBtn.addEventListener("click", async () => {
     const chosenValues = [];
     const chosenSummaries = [];
 
@@ -567,7 +572,12 @@
       }
     });
 
-    submitVote(chosenValues);
+    // Zablokovat tlačítko, ať nejde odeslat vícekrát, a dát uživateli zpětnou vazbu
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Odesílám…";
+    submitWarning.textContent = "";
+
+    await submitVote(chosenValues);
 
     cardsWrap.style.display = "none";
     submitArea.style.display = "none";
@@ -575,36 +585,57 @@
     thankyou.classList.add("visible");
   });
 
+  function buildParams(values) {
+    const params = new URLSearchParams();
+    values.forEach(val => params.append(ENTRY_MULTICHOICE, val));
+    params.append("fvv", "1");
+    params.append("pageHistory", "0");
+    params.append("fbzx", String(Date.now()));
+    return params;
+  }
+
+  // Odeslání hlasu: primárně sendBeacon (garantuje doručení požadavku,
+  // i kdyby uživatel hned zavřel/přepnul stránku - hlavní příčina "ztracených"
+  // odpovědí u iframe/form.submit() techniky na mobilu).
+  // Fallback na fetch s keepalive, pokud sendBeacon není podporovaný nebo selže.
   function submitVote(values) {
-    const form = document.createElement("form");
-    form.action = FORM_ACTION_URL;
-    form.method = "POST";
-    form.target = "hidden_iframe";
-    form.style.display = "none";
+    const params = buildParams(values);
 
-    values.forEach(val => {
-      const input = document.createElement("input");
-      input.name = ENTRY_MULTICHOICE;
-      input.value = val;
-      form.appendChild(input);
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = () => {
+        if (!done) { done = true; resolve(); }
+      };
+
+      // Pojistka: i kdyby se něco zaseklo, po 2.5s uživatele nenecháme viset
+      const safetyTimeout = setTimeout(finish, 2500);
+
+      try {
+        if (navigator.sendBeacon) {
+          const ok = navigator.sendBeacon(FORM_ACTION_URL, params);
+          if (ok) {
+            clearTimeout(safetyTimeout);
+            finish();
+            return;
+          }
+        }
+      } catch (err) {
+        // pokračuj na fallback
+      }
+
+      fetch(FORM_ACTION_URL, {
+        method: "POST",
+        mode: "no-cors",
+        keepalive: true,
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+      })
+        .catch(() => { /* opaque no-cors odpověď / chyba sítě - stejně nejde přečíst výsledek */ })
+        .finally(() => {
+          clearTimeout(safetyTimeout);
+          finish();
+        });
     });
-
-    const metaFields = {
-      "fvv": "1",
-      "pageHistory": "0",
-      "fbzx": String(Date.now())
-    };
-
-    Object.entries(metaFields).forEach(([name, value]) => {
-      const input = document.createElement("input");
-      input.name = name;
-      input.value = value;
-      form.appendChild(input);
-    });
-
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
   }
 </script>
 
