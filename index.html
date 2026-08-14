@@ -498,14 +498,11 @@
 
         // --- NOVÁ FUNKCIONALITA: Automatické nastavení času ---
         if (isYes) {
-          // Identifikace indexu druhé karty (pokud je tahle 0, druhá je 1 a naopak)
           const otherIdx = idx === 0 ? 1 : 0; 
           
           if (state[otherIdx].choice === "yes") {
-            // Zjištění času druhé karty a nastavení opačného času pro tuto kartu
             state[idx].time = state[otherIdx].time === "14:30" ? "15:00" : "14:30";
 
-            // Vizuální přepnutí aktivní třídy na správné časové tlačítko
             timeButtons.forEach(tb => {
               tb.classList.remove("active");
               if (tb.dataset.time === state[idx].time) {
@@ -538,21 +535,7 @@
         validate();
       });
     });
-  });
-
-    timeButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        timeButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        state[idx].time = btn.dataset.time;
-        
-        if(subText) {
-            subText.textContent = `Vybráno · ${state[idx].time}`;
-        }
-        validate();
-      });
-    });
-  });
+  }); // Zde byla dříve ta zdvojená část, která způsobovala chybu
 
   function validate() {
     const yesEntries = state.filter(s => s.choice === "yes");
@@ -575,9 +558,8 @@
     cardEls.forEach((card, idx) => {
       const s = state[idx];
       if (s.choice === "yes") {
-        // Generování formátu ba1430, ds1500 atd.
         const prefix = card.dataset.location.includes("Barokní") ? "ba" : "ds";
-        const timeCode = s.time.replace(":", ""); // odstraní dvojtečku: "14:30" -> "1430"
+        const timeCode = s.time.replace(":", ""); 
         const finalValue = prefix + timeCode;
 
         chosenValues.push(finalValue);
@@ -585,7 +567,6 @@
       }
     });
 
-    // Odeslání všech vybraných hodnot najednou
     submitVote(chosenValues);
 
     cardsWrap.style.display = "none";
@@ -601,8 +582,6 @@
     form.target = "hidden_iframe";
     form.style.display = "none";
 
-    // Pro multichoice otázku vytvoříme input pro každou zvolenou variantu
-    // Všechny musí mít stejný 'name' (ID otázky)
     values.forEach(val => {
       const input = document.createElement("input");
       input.name = ENTRY_MULTICHOICE;
@@ -610,7 +589,6 @@
       form.appendChild(input);
     });
 
-    // Skrytá pole vyžadovaná Google Formuláři
     const metaFields = {
       "fvv": "1",
       "pageHistory": "0",
