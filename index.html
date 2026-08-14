@@ -485,7 +485,7 @@
     const ynButtons = card.querySelectorAll(".yn-btn");
     const timeWrap = card.querySelector(".card-time");
     const timeButtons = card.querySelectorAll(".card-time-btn");
-    const subText = card.querySelector(".card-sub"); // Zde chyběl ve vašem HTML element .card-sub, doporučuji ho přidat, nebo tento řádek smazat
+    const subText = card.querySelector(".card-sub");
 
     ynButtons.forEach(btn => {
       btn.addEventListener("click", () => {
@@ -495,6 +495,27 @@
 
         state[idx].choice = btn.dataset.choice;
         const isYes = state[idx].choice === "yes";
+
+        // --- NOVÁ FUNKCIONALITA: Automatické nastavení času ---
+        if (isYes) {
+          // Identifikace indexu druhé karty (pokud je tahle 0, druhá je 1 a naopak)
+          const otherIdx = idx === 0 ? 1 : 0; 
+          
+          if (state[otherIdx].choice === "yes") {
+            // Zjištění času druhé karty a nastavení opačného času pro tuto kartu
+            state[idx].time = state[otherIdx].time === "14:30" ? "15:00" : "14:30";
+
+            // Vizuální přepnutí aktivní třídy na správné časové tlačítko
+            timeButtons.forEach(tb => {
+              tb.classList.remove("active");
+              if (tb.dataset.time === state[idx].time) {
+                tb.classList.add("active");
+              }
+            });
+          }
+        }
+        // --------------------------------------------------------
+
         timeWrap.hidden = !isYes;
         
         if(subText) {
@@ -504,6 +525,20 @@
         validate();
       });
     });
+
+    timeButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        timeButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state[idx].time = btn.dataset.time;
+        
+        if(subText) {
+            subText.textContent = `Vybráno · ${state[idx].time}`;
+        }
+        validate();
+      });
+    });
+  });
 
     timeButtons.forEach(btn => {
       btn.addEventListener("click", () => {
