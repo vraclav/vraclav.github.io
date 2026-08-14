@@ -6,23 +6,8 @@
 <title>Kam se podíváme?</title>
 
 <!--
-  ============================================================
-  CO JE TŘEBA DOPLNIT PŘED NASAZENÍM (viz i konec souboru, sekce <script>):
-
-  1) FORM_ACTION_URL — odesílací URL Google Formuláře.
-     Otevři svůj formulář -> tři tečky -> "Získat odkaz na formulář s předvyplněnými odpověďmi"
-     NEBO ve zdrojovém kódu formuláře najdi <form action="https://docs.google.com/forms/d/e/XXXXX/formResponse">
-     a nahraď "/viewform" na konci za "/formResponse".
-
-  2) ENTRY_TIME a ENTRY_LOCATION — ID jednotlivých otázek.
-     Otevři formulář, dej si "Náhled", otevři si Nástroje pro vývojáře (F12),
-     u každé otázky najdi input/radio se jménem entry.123456789 — to je hledané ID.
-     Nejjednodušší cesta: do adresního řádku napiš "?usp=pp_url" na konec URL formuláře,
-     předvyplň si odpovědi a Google ti vygeneruje odkaz obsahující entry.XXXX=hodnota pro každé pole.
-
-  3) Fotografie — nahraď placeholder bloky (.card-photo) reálnými fotkami,
-     buď přes CSS background-image, nebo vlož <img> dovnitř .card-photo.
-  ============================================================
+  Propojeno s Google Formulářem "Rezervace prohlídky" (osinekpa@gmail.com).
+  Fotky a znak obce jsou ve složce ./img/ vedle tohoto souboru.
 -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -386,8 +371,8 @@
   // KONFIGURACE — DOPLŇTE VLASTNÍ HODNOTY Z GOOGLE FORMS
   // ============================================================
   const FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSeLQ8SlUt9tZTSCq7qrz9aAPC1a0CkpMdR9BXVs3jkGEDJBtg/formResponse";
-  const ENTRY_TIME = "entry.341589083";      // ID otázky "Čas"
-  const ENTRY_LOCATION = "1682154569";  // ID otázky "Místo"
+  const ENTRY_TIME = "entry.1682154569";     // ID otázky "Vyberte čas"
+  const ENTRY_LOCATION = "entry.341589083";  // ID otázky "Vyberte lokalitu"
   // ============================================================
 
   let selectedTime = "14:30";
@@ -409,9 +394,10 @@
   cards.forEach(card => {
     card.addEventListener("click", () => {
       const location = card.dataset.location;
+      const formValue = card.dataset.formValue;
       cards.forEach(c => c.setAttribute("disabled", "true"));
 
-      submitVote(selectedTime, location);
+      submitVote(selectedTime, formValue);
 
       cardsWrap.classList.add("hidden");
       thankyouDetail.textContent = `${location} · ${selectedTime}`;
@@ -426,15 +412,20 @@
     form.target = "hidden_iframe";
     form.style.display = "none";
 
-    const fieldTime = document.createElement("input");
-    fieldTime.name = ENTRY_TIME;
-    fieldTime.value = time;
-    form.appendChild(fieldTime);
+    const fields = {
+      [ENTRY_TIME]: time,
+      [ENTRY_LOCATION]: location,
+      "fvv": "1",
+      "pageHistory": "0",
+      "fbzx": String(Date.now())
+    };
 
-    const fieldLocation = document.createElement("input");
-    fieldLocation.name = ENTRY_LOCATION;
-    fieldLocation.value = location;
-    form.appendChild(fieldLocation);
+    Object.entries(fields).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
 
     document.body.appendChild(form);
     form.submit();
