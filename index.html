@@ -274,9 +274,18 @@
     padding: 3px;
     background: rgba(255,255,255,0.92);
     border-radius: 999px;
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    will-change: opacity, transform; /* hardwarová akcelerace */
   }
 
-  .card-time[hidden] { display: none; }
+  .card-time.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
 
   .card-time-btn {
     appearance: none;
@@ -413,7 +422,7 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke-width="3" stroke-linecap="round"/></svg>
           </button>
         </div>
-        <div class="card-time" hidden>
+        <div class="card-time">
           <button type="button" class="card-time-btn active" data-time="14:30">14:30</button>
           <button type="button" class="card-time-btn" data-time="15:00">15:00</button>
         </div>
@@ -439,7 +448,7 @@
             <svg viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke-width="3" stroke-linecap="round"/></svg>
           </button>
         </div>
-        <div class="card-time" hidden>
+        <div class="card-time">
           <button type="button" class="card-time-btn active" data-time="14:30">14:30</button>
           <button type="button" class="card-time-btn" data-time="15:00">15:00</button>
         </div>
@@ -518,7 +527,7 @@
         }
         // --------------------------------------------------------
 
-        timeWrap.hidden = !isYes;
+        timeWrap.classList.toggle('visible', isYes);
         
         if(subText) {
             subText.textContent = isYes ? `Vybráno · ${state[idx].time}` : "Nehlasujete pro toto místo";
