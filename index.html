@@ -186,6 +186,12 @@
     line-height: 1.1;
     margin: 0 0 4px;
   }
+
+  .card {
+    cursor: pointer;
+    user-select: none;
+  }
+  
   .flourish {
     position: absolute;
     bottom: 90px;
@@ -542,6 +548,14 @@
   const timeWrap = card.querySelector(".card-time");
   const timeButtons = card.querySelectorAll(".card-time-btn");
   const subText = card.querySelector(".card-sub");
+
+    card.addEventListener('click', (e) => {
+    if (e.target.closest('.card-time')) return;
+    if (e.target.closest('.interest-toggle')) return;
+    
+    checkbox.checked = !checkbox.checked;
+    checkbox.dispatchEvent(new Event('change'));
+  });
 
   checkbox.addEventListener("change", () => {
     state[idx].interested = checkbox.checked;
