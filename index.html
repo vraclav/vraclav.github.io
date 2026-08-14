@@ -140,6 +140,12 @@
     inset: 0;
     background-size: cover;
     background-position: center;
+    transition: opacity 0.3s ease;
+    will-change: opacity;
+  }
+
+  .card-inactive .card-photo {
+  opacity: 0.45;
   }
 
   .card-overlay {
@@ -257,6 +263,7 @@
 }
 
 .checkmark {
+  position: relative;
   width: 26px;
   height: 26px;
   border-radius: 50%;
@@ -265,11 +272,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.1s ease, border-color 0.1s ease;
   flex-shrink: 0;
 }
 
+.checkmark::before {
+  content: "";
+  position: absolute;
+  inset: -2px; /* pokryje i okraj */
+  border-radius: 50%;
+  background: var(--fresh-deep);
+  border: 2px solid var(--fresh-deep);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  will-change: opacity;
+  z-index: 0;
+}
+
 .checkmark svg {
+  position: relative;
+  z-index: 1;
   width: 14px;
   height: 14px;
   stroke: #fff;
@@ -277,15 +298,13 @@
   fill: none;
   opacity: 0;
   transform: scale(0.6);
-  transition: opacity 0.1s ease, transform 0.1s ease;
+  transition: opacity 0.15s ease, transform 0.15s ease;
   will-change: opacity, transform;
 }
 
-.interest-check:checked + .checkmark {
-  background: var(--fresh-deep);
-  border-color: var(--fresh-deep);
+.interest-check:checked + .checkmark::before {
+  opacity: 1;
 }
-
 .interest-check:checked + .checkmark svg {
   opacity: 1;
   transform: scale(1);
@@ -435,7 +454,7 @@
   </header>
 
   <div class="cards" id="cards">
-    <div class="card card-baroque" data-location="Barokní areál Vraclav" data-form-value="Barokni areal">
+    <div class="card card-baroque card-inactive" data-location="Barokní areál Vraclav" data-form-value="Barokni areal">
       <div class="card-photo"></div>
       <div class="card-overlay"></div>
       <svg class="flourish" viewBox="0 0 48 48" fill="none">
@@ -460,7 +479,7 @@
       </div>
     </div>
 
-    <div class="card card-modern" data-location="Budova dětských skupin" data-form-value="Detske skupiny">
+    <div class="card card-modern card-inactive" data-location="Budova dětských skupin" data-form-value="Detske skupiny">
       <div class="card-photo"></div>
       <div class="card-overlay"></div>
       <div class="blob"></div>
@@ -526,6 +545,8 @@
 
   checkbox.addEventListener("change", () => {
     state[idx].interested = checkbox.checked;
+
+    card.classList.toggle('card-inactive', !checkbox.checked);
 
     // Zobrazit/skrýt čas
     timeWrap.classList.toggle('visible', checkbox.checked);
