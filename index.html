@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kam se podíváme?</title>
+
+<!--
+  ============================================================
+  CO JE TŘEBA DOPLNIT PŘED NASAZENÍM (viz i konec souboru, sekce <script>):
+
+  1) FORM_ACTION_URL — odesílací URL Google Formuláře.
+     Otevři svůj formulář -> tři tečky -> "Získat odkaz na formulář s předvyplněnými odpověďmi"
+     NEBO ve zdrojovém kódu formuláře najdi <form action="https://docs.google.com/forms/d/e/XXXXX/formResponse">
+     a nahraď "/viewform" na konci za "/formResponse".
+
+  2) ENTRY_TIME a ENTRY_LOCATION — ID jednotlivých otázek.
+     Otevři formulář, dej si "Náhled", otevři si Nástroje pro vývojáře (F12),
+     u každé otázky najdi input/radio se jménem entry.123456789 — to je hledané ID.
+     Nejjednodušší cesta: do adresního řádku napiš "?usp=pp_url" na konec URL formuláře,
+     předvyplň si odpovědi a Google ti vygeneruje odkaz obsahující entry.XXXX=hodnota pro každé pole.
+
+  3) Fotografie — nahraď placeholder bloky (.card-photo) reálnými fotkami,
+     buď přes CSS background-image, nebo vlož <img> dovnitř .card-photo.
+  ============================================================
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,600&family=Sora:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --bg: #f2eee6;
+    --ink: #2b2620;
+    --ink-soft: #6b6154;
+    --gold: #b8873b;
+    --gold-deep: #8c6425;
+    --fresh: #3e7c6b;
+    --fresh-deep: #2c5c4f;
+    --line: rgba(43,38,32,0.12);
+    --radius: 18px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    min-height: 100svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px 48px;
+  }
+
+  .page {
+    width: 100%;
+    max-width: 900px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .logo {
+    height: 64px;
+    width: auto;
+    margin: 0 auto 18px;
+    display: block;
+  }
+
+  .eyebrow {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-style: italic;
+    font-size: clamp(32px, 6vw, 48px);
+    margin: 0 0 8px;
+    line-height: 1.05;
+  }
+
+  .subtext {
+    color: var(--ink-soft);
+    font-size: 15px;
+    margin: 0;
+  }
+
+  /* ---- Time toggle ---- */
+  .time-toggle {
+    display: inline-flex;
+    margin: 28px auto 32px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    box-shadow: 0 1px 2px rgba(43,38,32,0.04);
+  }
+
+  .time-toggle-wrap {
+    display: flex;
+    justify-content: center;
+  }
+
+  .time-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 10px 26px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.25s ease, color 0.25s ease;
+  }
+
+  .time-btn.active {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  /* ---- Cards ---- */
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+
+  @media (max-width: 640px) {
+    .cards { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    position: relative;
+    height: 340px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    border: none;
+    padding: 0;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .card-photo {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    transform: scale(1.0);
+    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .card:hover .card-photo,
+  .card:focus-visible .card-photo {
+    transform: scale(1.06);
+  }
+
+  .card-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.05) 100%);
+    transition: background 0.4s ease;
+  }
+
+  .card:hover .card-overlay,
+  .card:focus-visible .card-overlay {
+    background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0.08) 100%);
+  }
+
+  .card-content {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    padding: 22px;
+    color: #fff;
+  }
+
+  .card-tag {
+    display: inline-block;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 600;
+    padding: 5px 11px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  /* Baroque card — ornate serif identity */
+  .card-baroque .card-photo {
+    background-color: #4a3a22;
+    background-image:
+      linear-gradient(to top, rgba(20,14,5,0.15), rgba(20,14,5,0) 40%),
+      url('img/barokni_areal.jpg');
+  }
+  .card-baroque .card-tag { background: rgba(184,135,59,0.9); color: #2b2013; }
+  .card-baroque .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 30px;
+    line-height: 1.1;
+    margin: 0 0 4px;
+  }
+  .flourish {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 46px;
+    height: 46px;
+    opacity: 0.8;
+  }
+
+  /* Modern building card — bold geometric identity */
+  .card-modern .card-photo {
+    background-color: #1f4a40;
+    background-image:
+      linear-gradient(to top, rgba(10,20,17,0.15), rgba(10,20,17,0) 40%),
+      url('img/detske_skupiny.jpg');
+  }
+  .card-modern .card-tag { background: rgba(62,124,107,0.9); color: #eefaf6; }
+  .card-modern .card-title {
+    font-family: 'Sora', sans-serif;
+    font-weight: 700;
+    font-size: 27px;
+    line-height: 1.15;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  .blob {
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 120px;
+    height: 120px;
+    border-radius: 40% 60% 55% 45% / 50% 45% 55% 50%;
+    background: rgba(255,255,255,0.10);
+  }
+
+  .card-sub {
+    font-size: 13px;
+    opacity: 0.85;
+    margin: 0;
+  }
+
+  .card:active { transform: scale(0.99); }
+
+  .card[disabled] {
+    pointer-events: none;
+    opacity: 0.55;
+  }
+
+  /* ---- Thank you state ---- */
+  .thankyou {
+    display: none;
+    text-align: center;
+    padding: 70px 20px;
+    background: #fff;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+  }
+
+  .thankyou.visible {
+    display: block;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  .cards.hidden { display: none; }
+
+  .check {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--fresh-deep));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 18px;
+  }
+
+  .check svg { width: 26px; height: 26px; }
+
+  .thankyou h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 28px;
+    margin: 0 0 6px;
+  }
+
+  .thankyou p {
+    color: var(--ink-soft);
+    font-size: 14px;
+    margin: 0;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card-photo, .card-overlay, .thankyou.visible { transition: none; animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <img src="img/logo.png" alt="Znak obce" class="logo">
+    <div class="eyebrow">Hlasování · výběr programu</div>
+    <h1>Kam se podíváme?</h1>
+    <p class="subtext">Vyberte čas a poté klikněte na místo, které preferujete.</p>
+  </header>
+
+  <div class="time-toggle-wrap">
+    <div class="time-toggle" role="group" aria-label="Výběr času">
+      <button type="button" class="time-btn active" data-time="14:30">14:30</button>
+      <button type="button" class="time-btn" data-time="15:00">15:00</button>
+    </div>
+  </div>
+
+  <div class="cards" id="cards">
+    <button type="button" class="card card-baroque" data-location="Barokní areál Vraclav" aria-label="Hlasovat pro Barokní areál Vraclav">
+      <div class="card-photo"></div>
+      <div class="card-overlay"></div>
+      <svg class="flourish" viewBox="0 0 48 48" fill="none">
+        <path d="M4 24c8 0 8-16 20-16M44 24c-8 0-8 16-20 16M24 4c0 8 16 8 16 20M24 44c0-8-16-8-16-20" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      <div class="card-content">
+        <span class="card-tag">Historické místo</span>
+        <p class="card-title">Barokní areál Vraclav</p>
+        <p class="card-sub">Klikněte pro odevzdání hlasu</p>
+      </div>
+    </button>
+
+    <button type="button" class="card card-modern" data-location="Budova dětských skupin" aria-label="Hlasovat pro budovu dětských skupin">
+      <div class="card-photo"></div>
+      <div class="card-overlay"></div>
+      <div class="blob"></div>
+      <div class="card-content">
+        <span class="card-tag">Moderní zázemí</span>
+        <p class="card-title">Budova dětských skupin</p>
+        <p class="card-sub">Klikněte pro odevzdání hlasu</p>
+      </div>
+    </button>
+  </div>
+
+  <div class="thankyou" id="thankyou">
+    <div class="check">
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M4 12.5L9.5 18L20 6" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <h2>Děkujeme za Váš hlas!</h2>
+    <p id="thankyou-detail"></p>
+  </div>
+</div>
+
+<!-- Skrytý iframe jako cíl odeslání formuláře, aby nedošlo k přesměrování stránky -->
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+<script>
+  // ============================================================
+  // KONFIGURACE — DOPLŇTE VLASTNÍ HODNOTY Z GOOGLE FORMS
+  // ============================================================
+  const FORM_ACTION_URL = "https://docs.google.com/forms/d/e/REPLACE_WITH_YOUR_FORM_ID/formResponse";
+  const ENTRY_TIME = "entry.111111111";      // ID otázky "Čas"
+  const ENTRY_LOCATION = "entry.222222222";  // ID otázky "Místo"
+  // ============================================================
+
+  let selectedTime = "14:30";
+
+  const timeButtons = document.querySelectorAll(".time-btn");
+  timeButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      timeButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedTime = btn.dataset.time;
+    });
+  });
+
+  const cardsWrap = document.getElementById("cards");
+  const cards = document.querySelectorAll(".card");
+  const thankyou = document.getElementById("thankyou");
+  const thankyouDetail = document.getElementById("thankyou-detail");
+
+  cards.forEach(card => {
+    card.addEventListener("click", () => {
+      const location = card.dataset.location;
+      cards.forEach(c => c.setAttribute("disabled", "true"));
+
+      submitVote(selectedTime, location);
+
+      cardsWrap.classList.add("hidden");
+      thankyouDetail.textContent = `${location} · ${selectedTime}`;
+      thankyou.classList.add("visible");
+    });
+  });
+
+  function submitVote(time, location) {
+    const form = document.createElement("form");
+    form.action = FORM_ACTION_URL;
+    form.method = "POST";
+    form.target = "hidden_iframe";
+    form.style.display = "none";
+
+    const fieldTime = document.createElement("input");
+    fieldTime.name = ENTRY_TIME;
+    fieldTime.value = time;
+    form.appendChild(fieldTime);
+
+    const fieldLocation = document.createElement("input");
+    fieldLocation.name = ENTRY_LOCATION;
+    fieldLocation.value = location;
+    form.appendChild(fieldLocation);
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+  }
+</script>
+
+</body>
+</html>
