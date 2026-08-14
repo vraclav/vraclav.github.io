@@ -594,48 +594,74 @@
     return params;
   }
 
-  // Odeslání hlasu: primárně sendBeacon (garantuje doručení požadavku,
-  // i kdyby uživatel hned zavřel/přepnul stránku - hlavní příčina "ztracených"
-  // odpovědí u iframe/form.submit() techniky na mobilu).
-  // Fallback na fetch s keepalive, pokud sendBeacon není podporovaný nebo selže.
+  // Odeslání hlasu VÍCE nezávislými cestami zároveň. Důvod: některé ad-blockery /
+  // privacy prohlížeče / síťové filtry (AdGuard, NextDNS, Brave Shields, Samsung
+  // Internet…) blokují requesty na docs.google.com/forms/.../formResponse jako
+  // "tracker" - typicky jen konkrétní typ requestu (fetch/XHR/beacon), ale klasickou
+  // navigaci přes <form> nechají projít, nebo naopak. Posláním všemi cestami zároveň
+  // maximalizujeme šanci, že aspoň jedna projde. Kvůli cross-origin/no-cors navíc
+  // nikdy nejde se 100% jistotou zjistit, že se odpověď zapsala - proto tenhle přístup.
   function submitVote(values) {
     const params = buildParams(values);
 
-    return new Promise((resolve) => {
-      let done = false;
-      const finish = () => {
-        if (!done) { done = true; resolve(); }
-      };
-
-      // Pojistka: i kdyby se něco zaseklo, po 2.5s uživatele nenecháme viset
-      const safetyTimeout = setTimeout(finish, 2500);
-
-      try {
-        if (navigator.sendBeacon) {
-          const ok = navigator.sendBeacon(FORM_ACTION_URL, params);
-          if (ok) {
-            clearTimeout(safetyTimeout);
-            finish();
-            return;
-          }
-        }
-      } catch (err) {
-        // pokračuj na fallback
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(FORM_ACTION_URL, params);
       }
+    } catch (err) { /* ignorováno, zkusíme další cestu */ }
 
+    try {
       fetch(FORM_ACTION_URL, {
         method: "POST",
         mode: "no-cors",
         keepalive: true,
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: params.toString()
-      })
-        .catch(() => { /* opaque no-cors odpověď / chyba sítě - stejně nejde přečíst výsledek */ })
-        .finally(() => {
-          clearTimeout(safetyTimeout);
-          finish();
-        });
+      }).catch(() => {});
+    } catch (err) { /* ignorováno, zkusíme další cestu */ }
+
+    try {
+      submitViaHiddenForm(values);
+    } catch (err) { /* ignorováno */ }
+
+    // Dát prohlížeči chvilku, ať requesty stihne odeslat, než ukážeme "Děkujeme"
+    return new Promise(resolve => setTimeout(resolve, 600));
+  }
+
+  function submitViaHiddenForm(values) {
+    let iframe = document.getElementById("hidden_iframe");
+    if (!iframe) {
+      iframe = document.createElement("iframe");
+      iframe.name = "hidden_iframe";
+      iframe.id = "hidden_iframe";
+      iframe.style.display = "none";
+      document.body.appendChild(iframe);
+    }
+
+    const form = document.createElement("form");
+    form.action = FORM_ACTION_URL;
+    form.method = "POST";
+    form.target = "hidden_iframe";
+    form.style.display = "none";
+
+    values.forEach(val => {
+      const input = document.createElement("input");
+      input.name = ENTRY_MULTICHOICE;
+      input.value = val;
+      form.appendChild(input);
     });
+
+    const metaFields = { fvv: "1", pageHistory: "0", fbzx: String(Date.now()) };
+    Object.entries(metaFields).forEach(([name, value]) => {
+      const input = document.createElement("input");
+      input.name = name;
+      input.value = value;
+      form.appendChild(input);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    setTimeout(() => form.remove(), 1000);
   }
 </script>
 
