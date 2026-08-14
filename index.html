@@ -4,7 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Varianty prohlídky</title>
-  
+
+<!--
+  Propojeno s Google Formulářem "Rezervace prohlídky" (osinekpa@gmail.com).
+  Fotky a znak obce jsou ve složce ./img/ vedle tohoto souboru.
+  U každé karty se volí Ano/Ne a při Ano čas. Pokud jsou obě "Ano", nesmí mít stejný čas.
+  Odeslání je jedním společným tlačítkem dole.
+-->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,600&family=Sora:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
@@ -20,54 +27,63 @@
     --fresh-deep: #2c5c4f;
     --line: rgba(43,38,32,0.12);
     --radius: 18px;
+    --danger: #b5453c;
   }
 
   * { box-sizing: border-box; }
 
-  html {
-  background: var(--bg);
-}
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
 
-body {
-  margin: 0;
-  padding: 0;
-  background: transparent; /* Klíčová změna: zprůhlednění vrstvy */
-  color: var(--ink);
-  font-family: 'Inter', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  
-  position: relative;
-  min-height: 100svh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 32px 20px 48px;
-}
+  .hero-bg {
+    position: relative;
+    width: 100%;
+    height: 34vh;
+    min-height: 220px;
+    max-height: 380px;
+    overflow: hidden;
+  }
 
-body::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 60vh;
-  min-height: 450px;
-  /*background-image: 
-    linear-gradient(to bottom, #f2eee600 0%, var(--bg) 95%),
-    url('img/background.jpg');
-  background-size: cover;
-  background-position: center top;*/
-  z-index: -1;
-  pointer-events: none;
-}
+  .hero-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url('img/background.jpg');
+    background-size: cover;
+    background-position: center 60%;
+  }
+
+  .hero-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to bottom, rgba(242,238,230,0) 0%, rgba(242,238,230,0.55) 55%, var(--bg) 100%);
+  }
+
+  body {
+    min-height: 100svh;
+    margin: 0;
+    display: block;
+  }
 
   .page {
     width: 100%;
     max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px 56px;
   }
 
   header {
     text-align: center;
+    margin-top: -64px;
+    position: relative;
+    z-index: 2;
     margin-bottom: 32px;
   }
 
@@ -76,6 +92,7 @@ body::before {
     width: auto;
     margin: 0 auto 18px;
     display: block;
+    filter: drop-shadow(0 2px 6px rgba(43,38,32,0.25));
   }
 
   .eyebrow {
@@ -100,41 +117,9 @@ body::before {
     color: var(--ink-soft);
     font-size: 15px;
     margin: 0;
-  }
-
-  /* ---- Time toggle ---- */
-  .time-toggle {
-    display: inline-flex;
-    margin: 28px auto 32px;
-    padding: 4px;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 999px;
-    box-shadow: 0 1px 2px rgba(43,38,32,0.04);
-  }
-
-  .time-toggle-wrap {
-    display: flex;
-    justify-content: center;
-  }
-
-  .time-btn {
-    appearance: none;
-    border: none;
-    background: transparent;
-    padding: 10px 26px;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--ink-soft);
-    border-radius: 999px;
-    cursor: pointer;
-    transition: background 0.25s ease, color 0.25s ease;
-  }
-
-  .time-btn.active {
-    background: var(--ink);
-    color: #fff;
+    max-width: 480px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   /* ---- Cards ---- */
@@ -150,16 +135,9 @@ body::before {
 
   .card {
     position: relative;
-    height: 340px;
+    height: 380px;
     border-radius: var(--radius);
     overflow: hidden;
-    cursor: pointer;
-    border: none;
-    padding: 0;
-    text-align: left;
-    font: inherit;
-    color: inherit;
-    -webkit-tap-highlight-color: transparent;
   }
 
   .card-photo {
@@ -167,25 +145,12 @@ body::before {
     inset: 0;
     background-size: cover;
     background-position: center;
-    transform: scale(1.0);
-    transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .card:hover .card-photo,
-  .card:focus-visible .card-photo {
-    transform: scale(1.06);
   }
 
   .card-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.05) 100%);
-    transition: background 0.4s ease;
-  }
-
-  .card:hover .card-overlay,
-  .card:focus-visible .card-overlay {
-    background: linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.28) 50%, rgba(0,0,0,0.08) 100%);
+    background: linear-gradient(to top, rgba(0,0,0,0.66) 0%, rgba(0,0,0,0.2) 45%, rgba(0,0,0,0.08) 100%);
   }
 
   .card-content {
@@ -206,7 +171,6 @@ body::before {
     margin-bottom: 10px;
   }
 
-  /* Baroque card — ornate serif identity */
   .card-baroque .card-photo {
     background-color: #4a3a22;
     background-image:
@@ -223,19 +187,19 @@ body::before {
   }
   .flourish {
     position: absolute;
-    top: 16px;
+    bottom: 90px;
     right: 16px;
-    width: 46px;
-    height: 46px;
-    opacity: 0.8;
+    width: 40px;
+    height: 40px;
+    opacity: 0.7;
+    z-index: 1;
   }
 
-  /* Modern building card — bold geometric identity */
   .card-modern .card-photo {
     background-color: #1f4a40;
     background-image:
       linear-gradient(to top, rgba(10,20,17,0.15), rgba(10,20,17,0) 40%),
-      url('img/detske_skupiny.png');
+      url('img/detske_skupiny.jpg');
   }
   .card-modern .card-tag { background: rgba(62,124,107,0.9); color: #eefaf6; }
   .card-modern .card-title {
@@ -254,6 +218,7 @@ body::before {
     height: 120px;
     border-radius: 40% 60% 55% 45% / 50% 45% 55% 50%;
     background: rgba(255,255,255,0.10);
+    z-index: 1;
   }
 
   .card-sub {
@@ -262,11 +227,114 @@ body::before {
     margin: 0;
   }
 
-  .card:active { transform: scale(0.99); }
+  /* ---- Controls row: Ano/Ne + time ---- */
+  .card-controls {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
 
-  .card[disabled] {
-    pointer-events: none;
-    opacity: 0.55;
+  .yn-toggle {
+    display: inline-flex;
+    padding: 3px;
+    background: rgba(255,255,255,0.92);
+    border-radius: 999px;
+  }
+
+  .yn-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  .yn-btn svg { width: 15px; height: 15px; }
+
+  .yn-yes svg { stroke: var(--fresh-deep); }
+  .yn-no svg { stroke: var(--danger); }
+
+  .yn-btn.active.yn-yes { background: var(--fresh-deep); }
+  .yn-btn.active.yn-yes svg { stroke: #fff; }
+
+  .yn-btn.active.yn-no { background: var(--danger); }
+  .yn-btn.active.yn-no svg { stroke: #fff; }
+
+  .card-time {
+    display: inline-flex;
+    padding: 3px;
+    background: rgba(255,255,255,0.92);
+    border-radius: 999px;
+  }
+
+  .card-time[hidden] { display: none; }
+
+  .card-time-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    padding: 7px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .card-time-btn.active {
+    background: var(--ink);
+    color: #fff;
+  }
+
+  /* ---- Submit area ---- */
+  .submit-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .submit-warning {
+    font-size: 13px;
+    color: var(--danger);
+    min-height: 18px;
+    text-align: center;
+  }
+
+  .submit-btn {
+    appearance: none;
+    border: none;
+    padding: 14px 36px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    border-radius: 999px;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--gold), var(--fresh-deep));
+    transition: opacity 0.2s ease, transform 0.15s ease;
+  }
+
+  .submit-btn:active { transform: scale(0.98); }
+
+  .submit-btn:disabled {
+    background: #cfc9bd;
+    cursor: not-allowed;
   }
 
   /* ---- Thank you state ---- */
@@ -283,8 +351,6 @@ body::before {
     display: block;
     animation: fadeUp 0.5s ease both;
   }
-
-  .cards.hidden { display: none; }
 
   .check {
     width: 56px;
@@ -317,53 +383,81 @@ body::before {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
-
-  @media (prefers-reduced-motion: reduce) {
-    .card-photo, .card-overlay, .thankyou.visible { transition: none; animation: none; }
-  }
 </style>
 </head>
 <body>
+
+<div class="hero-bg"></div>
 
 <div class="page">
   <header>
     <img src="img/logo.png" alt="Znak obce" class="logo">
     <div class="eyebrow">Hlasování · výběr prohlídky</div>
-    <h1>Varianty prohlídky</h1>
-    <p class="subtext">Vyberte čas a poté klikněte na místo, které preferujete.</p>
+    <h1>Vyberte varianty prohlídky</h1>
+    <p class="subtext">U každého místa zvolte Ano nebo Ne. Při Ano zvolte i čas.</p>
   </header>
 
-  <div class="time-toggle-wrap">
-    <div class="time-toggle" role="group" aria-label="Výběr času">
-      <button type="button" class="time-btn active" data-time="14:30">14:30</button>
-      <button type="button" class="time-btn" data-time="15:00">15:00</button>
-    </div>
-  </div>
-
   <div class="cards" id="cards">
-    <button type="button" class="card card-baroque" data-location="Barokní areál Vraclav" data-form-value="Barokni areal" aria-label="Hlasovat pro Barokní areál Vraclav">
+    <div class="card card-baroque" data-location="Barokní areál Vraclav" data-form-value="Barokni areal">
       <div class="card-photo"></div>
       <div class="card-overlay"></div>
       <svg class="flourish" viewBox="0 0 48 48" fill="none">
         <path d="M4 24c8 0 8-16 20-16M44 24c-8 0-8 16-20 16M24 4c0 8 16 8 16 20M24 44c0-8-16-8-16-20" stroke="rgba(255,255,255,0.55)" stroke-width="1.4" stroke-linecap="round"/>
       </svg>
+
+      <div class="card-controls">
+        <div class="yn-toggle" role="group" aria-label="Chcete hlasovat pro Barokní areál Vraclav?">
+          <button type="button" class="yn-btn yn-yes" data-choice="yes" aria-label="Ano" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="yn-btn yn-no active" data-choice="no" aria-label="Ne" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke-width="3" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="card-time" hidden>
+          <button type="button" class="card-time-btn active" data-time="14:30">14:30</button>
+          <button type="button" class="card-time-btn" data-time="15:00">15:00</button>
+        </div>
+      </div>
+
       <div class="card-content">
         <span class="card-tag">Historické místo</span>
         <p class="card-title">Barokní areál Vraclav</p>
-        <p class="card-sub">Klikněte pro odevzdání hlasu</p>
+        <p class="card-sub">Zvolte Ano/Ne výše</p>
       </div>
-    </button>
+    </div>
 
-    <button type="button" class="card card-modern" data-location="Budova dětských skupin" data-form-value="Detske skupiny" aria-label="Hlasovat pro budovu dětských skupin">
+    <div class="card card-modern" data-location="Budova dětských skupin" data-form-value="Detske skupiny">
       <div class="card-photo"></div>
       <div class="card-overlay"></div>
       <div class="blob"></div>
+
+      <div class="card-controls">
+        <div class="yn-toggle" role="group" aria-label="Chcete hlasovat pro budovu dětských skupin?">
+          <button type="button" class="yn-btn yn-yes" data-choice="yes" aria-label="Ano" aria-pressed="false">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="yn-btn yn-no active" data-choice="no" aria-label="Ne" aria-pressed="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke-width="3" stroke-linecap="round"/></svg>
+          </button>
+        </div>
+        <div class="card-time" hidden>
+          <button type="button" class="card-time-btn active" data-time="14:30">14:30</button>
+          <button type="button" class="card-time-btn" data-time="15:00">15:00</button>
+        </div>
+      </div>
+
       <div class="card-content">
         <span class="card-tag">Moderní zázemí</span>
         <p class="card-title">Budova dětských skupin</p>
-        <p class="card-sub">Klikněte pro odevzdání hlasu</p>
+        <p class="card-sub">Zvolte Ano/Ne výše</p>
       </div>
-    </button>
+    </div>
+  </div>
+
+  <div class="submit-area" id="submitArea">
+    <div class="submit-warning" id="submitWarning"></div>
+    <button type="button" class="submit-btn" id="submitBtn" disabled>Odeslat hlas</button>
   </div>
 
   <div class="thankyou" id="thankyou">
@@ -373,7 +467,7 @@ body::before {
       </svg>
     </div>
     <h2>Děkujeme za Váš hlas!</h2>
-    <p id="thankyou-detail"></p>
+    <p id="thankyouDetail"></p>
   </div>
 </div>
 
@@ -382,41 +476,86 @@ body::before {
 
 <script>
   // ============================================================
-  // KONFIGURACE — DOPLŇTE VLASTNÍ HODNOTY Z GOOGLE FORMS
+  // KONFIGURACE
   // ============================================================
   const FORM_ACTION_URL = "https://docs.google.com/forms/u/0/d/e/1FAIpQLSeLQ8SlUt9tZTSCq7qrz9aAPC1a0CkpMdR9BXVs3jkGEDJBtg/formResponse";
   const ENTRY_TIME = "entry.1682154569";     // ID otázky "Vyberte čas"
   const ENTRY_LOCATION = "entry.341589083";  // ID otázky "Vyberte lokalitu"
   // ============================================================
 
-  let selectedTime = "14:30";
+  const cardEls = Array.from(document.querySelectorAll(".card"));
+  const state = cardEls.map(() => ({ choice: "no", time: "14:30" }));
 
-  const timeButtons = document.querySelectorAll(".time-btn");
-  timeButtons.forEach(btn => {
-    btn.addEventListener("click", () => {
-      timeButtons.forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      selectedTime = btn.dataset.time;
+  const submitBtn = document.getElementById("submitBtn");
+  const submitWarning = document.getElementById("submitWarning");
+  const submitArea = document.getElementById("submitArea");
+  const cardsWrap = document.getElementById("cards");
+  const thankyou = document.getElementById("thankyou");
+  const thankyouDetail = document.getElementById("thankyouDetail");
+
+  cardEls.forEach((card, idx) => {
+    const ynButtons = card.querySelectorAll(".yn-btn");
+    const timeWrap = card.querySelector(".card-time");
+    const timeButtons = card.querySelectorAll(".card-time-btn");
+    const subText = card.querySelector(".card-sub");
+
+    ynButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        ynButtons.forEach(b => { b.classList.remove("active"); b.setAttribute("aria-pressed", "false"); });
+        btn.classList.add("active");
+        btn.setAttribute("aria-pressed", "true");
+
+        state[idx].choice = btn.dataset.choice;
+        const isYes = state[idx].choice === "yes";
+        timeWrap.hidden = !isYes;
+        subText.textContent = isYes
+          ? `Vybráno · ${state[idx].time}`
+          : "Nehlasujete pro toto místo";
+
+        validate();
+      });
+    });
+
+    timeButtons.forEach(btn => {
+      btn.addEventListener("click", () => {
+        timeButtons.forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        state[idx].time = btn.dataset.time;
+        subText.textContent = `Vybráno · ${state[idx].time}`;
+        validate();
+      });
     });
   });
 
-  const cardsWrap = document.getElementById("cards");
-  const cards = document.querySelectorAll(".card");
-  const thankyou = document.getElementById("thankyou");
-  const thankyouDetail = document.getElementById("thankyou-detail");
+  function validate() {
+    const yesEntries = state.filter(s => s.choice === "yes");
+    let valid = yesEntries.length > 0;
+    let message = "";
 
-  cards.forEach(card => {
-    card.addEventListener("click", () => {
-      const location = card.dataset.location;
-      const formValue = card.dataset.formValue;
-      cards.forEach(c => c.setAttribute("disabled", "true"));
+    if (yesEntries.length === 2 && yesEntries[0].time === yesEntries[1].time) {
+      valid = false;
+      message = "Pro obě místa nelze zvolit stejný čas — zvolte prosím různé časy.";
+    }
 
-      submitVote(selectedTime, formValue);
+    submitWarning.textContent = message;
+    submitBtn.disabled = !valid;
+  }
 
-      cardsWrap.classList.add("hidden");
-      thankyouDetail.textContent = `${location} · ${selectedTime}`;
-      thankyou.classList.add("visible");
+  submitBtn.addEventListener("click", () => {
+    const chosenSummaries = [];
+
+    cardEls.forEach((card, idx) => {
+      const s = state[idx];
+      if (s.choice === "yes") {
+        submitVote(s.time, card.dataset.formValue);
+        chosenSummaries.push(`${card.dataset.location} · ${s.time}`);
+      }
     });
+
+    cardsWrap.style.display = "none";
+    submitArea.style.display = "none";
+    thankyouDetail.textContent = chosenSummaries.join(" · ");
+    thankyou.classList.add("visible");
   });
 
   function submitVote(time, location) {
