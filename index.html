@@ -235,67 +235,69 @@
     flex-wrap: wrap;
   }
 
-  .yn-toggle {
-    display: inline-flex;
-    padding: 3px;
-    background: rgba(255,255,255,0.92);
-    border-radius: 999px;
-  }
+.interest-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px 8px 12px;
+  background: rgba(255,255,255,0.92);
+  border-radius: 999px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
 
-  .yn-btn {
-  position: relative;
-  appearance: none;
-  border: none;
-  background: transparent;
-  width: 38px;
-  height: 38px;
+.interest-check {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.checkmark {
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
+  border: 2px solid var(--ink-soft);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  touch-action: manipulation;
-  -webkit-tap-highlight-color: transparent;
-  /* Odstraníme transition, protože pozadí animujeme přes pseudo-element */
-  transition: none;
+  transition: background 0.1s ease, border-color 0.1s ease;
+  flex-shrink: 0;
 }
 
-/* Pseudo-element pro barevné pozadí aktivního tlačítka */
-.yn-btn::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
+.checkmark svg {
+  width: 14px;
+  height: 14px;
+  stroke: #fff;
+  stroke-width: 3;
+  fill: none;
   opacity: 0;
-  transition: opacity 0.08s ease;
-  will-change: opacity;
-  z-index: 0;
+  transform: scale(0.6);
+  transition: opacity 0.1s ease, transform 0.1s ease;
+  will-change: opacity, transform;
 }
 
-.yn-yes::before { background: var(--fresh-deep); }
-.yn-no::before  { background: var(--danger); }
+.interest-check:checked + .checkmark {
+  background: var(--fresh-deep);
+  border-color: var(--fresh-deep);
+}
 
-.yn-btn.active::before {
+.interest-check:checked + .checkmark svg {
   opacity: 1;
+  transform: scale(1);
 }
 
-/* Ikona SVG */
-.yn-btn svg {
-  position: relative;
-  z-index: 1;
-  width: 15px;
-  height: 15px;
-  transition: stroke 0.08s ease;
-  will-change: stroke;
+.interest-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
 }
-
-/* Barvy ikon */
-.yn-yes svg { stroke: var(--fresh-deep); }
-.yn-no svg  { stroke: var(--danger); }
-
-.yn-btn.active.yn-yes svg { stroke: #fff; }
-.yn-btn.active.yn-no svg  { stroke: #fff; }
-
+  
   .card-time {
     display: inline-flex;
     padding: 3px;
@@ -441,14 +443,11 @@
       </svg>
 
       <div class="card-controls">
-        <div class="yn-toggle" role="group" aria-label="Chcete hlasovat pro Barokní areál Vraclav?">
-          <button type="button" class="yn-btn yn-yes" data-choice="yes" aria-label="Ano" aria-pressed="false">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button type="button" class="yn-btn yn-no active" data-choice="no" aria-label="Ne" aria-pressed="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke-width="3" stroke-linecap="round"/></svg>
-          </button>
-        </div>
+        <label class="interest-toggle">
+          <input type="checkbox" class="interest-check" aria-label="Mám zájem o Barokní areál Vraclav">
+          <span class="checkmark"></span>
+          <span class="interest-label">Mám zájem</span>
+        </label>
         <div class="card-time">
           <button type="button" class="card-time-btn active" data-time="14:30">14:30</button>
           <button type="button" class="card-time-btn" data-time="15:00">15:00</button>
@@ -467,14 +466,11 @@
       <div class="blob"></div>
 
       <div class="card-controls">
-        <div class="yn-toggle" role="group" aria-label="Chcete hlasovat pro budovu dětských skupin?">
-          <button type="button" class="yn-btn yn-yes" data-choice="yes" aria-label="Ano" aria-pressed="false">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M4 12.5L9.5 18L20 6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button type="button" class="yn-btn yn-no active" data-choice="no" aria-label="Ne" aria-pressed="true">
-            <svg viewBox="0 0 24 24" fill="none"><path d="M6 6L18 18M18 6L6 18" stroke-width="3" stroke-linecap="round"/></svg>
-          </button>
-        </div>
+        <label class="interest-toggle">
+          <input type="checkbox" class="interest-check" aria-label="Mám zájem o budovu dětských skupin">
+          <span class="checkmark"></span>
+          <span class="interest-label">Mám zájem</span>
+        </label>
         <div class="card-time">
           <button type="button" class="card-time-btn active" data-time="14:30">14:30</button>
           <button type="button" class="card-time-btn" data-time="15:00">15:00</button>
@@ -513,7 +509,7 @@
   // ============================================================
 
   const cardEls = Array.from(document.querySelectorAll(".card"));
-  const state = cardEls.map(() => ({ choice: "no", time: "14:30" }));
+  const state = cardEls.map(() => ({ interested: false, time: "14:30" }));
 
   const submitBtn = document.getElementById("submitBtn");
   const submitWarning = document.getElementById("submitWarning");
@@ -523,103 +519,94 @@
   const thankyouDetail = document.getElementById("thankyouDetail");
 
   cardEls.forEach((card, idx) => {
-    const ynButtons = card.querySelectorAll(".yn-btn");
-    const timeWrap = card.querySelector(".card-time");
-    const timeButtons = card.querySelectorAll(".card-time-btn");
-    const subText = card.querySelector(".card-sub");
+  const checkbox = card.querySelector(".interest-check");
+  const timeWrap = card.querySelector(".card-time");
+  const timeButtons = card.querySelectorAll(".card-time-btn");
+  const subText = card.querySelector(".card-sub");
 
-    ynButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        ynButtons.forEach(b => { b.classList.remove("active"); b.setAttribute("aria-pressed", "false"); });
-        btn.classList.add("active");
-        btn.setAttribute("aria-pressed", "true");
+  checkbox.addEventListener("change", () => {
+    state[idx].interested = checkbox.checked;
 
-        state[idx].choice = btn.dataset.choice;
-        const isYes = state[idx].choice === "yes";
+    // Zobrazit/skrýt čas
+    timeWrap.classList.toggle('visible', checkbox.checked);
 
-        // --- NOVÁ FUNKCIONALITA: Automatické nastavení času ---
-        if (isYes) {
-          const otherIdx = idx === 0 ? 1 : 0; 
-          
-          if (state[otherIdx].choice === "yes") {
-            state[idx].time = state[otherIdx].time === "14:30" ? "15:00" : "14:30";
-
-            timeButtons.forEach(tb => {
-              tb.classList.remove("active");
-              if (tb.dataset.time === state[idx].time) {
-                tb.classList.add("active");
-              }
-            });
+    // Pokud je zájem a druhá karta je také vybrána, nastavíme odlišný čas
+    if (checkbox.checked) {
+      const otherIdx = idx === 0 ? 1 : 0;
+      if (state[otherIdx].interested) {
+        state[idx].time = state[otherIdx].time === "14:30" ? "15:00" : "14:30";
+        // Aktualizovat aktivní časové tlačítko
+        timeButtons.forEach(tb => {
+          tb.classList.remove("active");
+          if (tb.dataset.time === state[idx].time) {
+            tb.classList.add("active");
           }
-        }
-        // --------------------------------------------------------
-
-        timeWrap.classList.toggle('visible', isYes);
-        
-        if(subText) {
-            subText.textContent = isYes ? `Vybráno · ${state[idx].time}` : "Nehlasujete pro toto místo";
-        }
-
-        validate();
-      });
-    });
-
-    timeButtons.forEach(btn => {
-      btn.addEventListener("click", () => {
-        timeButtons.forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        state[idx].time = btn.dataset.time;
-        
-        if(subText) {
-            subText.textContent = `Vybráno · ${state[idx].time}`;
-        }
-        validate();
-      });
-    });
-  }); // Zde byla dříve ta zdvojená část, která způsobovala chybu
-
-  function validate() {
-    const yesEntries = state.filter(s => s.choice === "yes");
-    let valid = yesEntries.length > 0;
-    let message = "";
-
-    if (yesEntries.length === 2 && yesEntries[0].time === yesEntries[1].time) {
-      valid = false;
-      message = "Pro obě místa nelze zvolit stejný čas — zvolte prosím různé časy.";
+        });
+      }
     }
 
-    submitWarning.textContent = message;
-    submitBtn.disabled = !valid;
+    // Aktualizovat text pod názvem
+    if (subText) {
+      subText.textContent = checkbox.checked ? `Vybráno · ${state[idx].time}` : "Nehlasujete pro toto místo";
+    }
+
+    validate();
+  });
+
+  timeButtons.forEach(btn => {
+    btn.addEventListener("click", () => {
+      timeButtons.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      state[idx].time = btn.dataset.time;
+
+      if (subText) {
+        subText.textContent = `Vybráno · ${state[idx].time}`;
+      }
+      validate();
+    });
+  });
+});
+
+function validate() {
+  const interested = state.filter(s => s.interested);
+  let valid = interested.length > 0;
+  let message = "";
+
+  if (interested.length === 2 && interested[0].time === interested[1].time) {
+    valid = false;
+    message = "Pro obě místa nelze zvolit stejný čas — zvolte prosím různé časy.";
   }
 
-  submitBtn.addEventListener("click", async () => {
-    const chosenValues = [];
-    const chosenSummaries = [];
+  submitWarning.textContent = message;
+  submitBtn.disabled = !valid;
+}
 
-    cardEls.forEach((card, idx) => {
-      const s = state[idx];
-      if (s.choice === "yes") {
-        const prefix = card.dataset.location.includes("Barokní") ? "ba" : "ds";
-        const timeCode = s.time.replace(":", ""); 
-        const finalValue = prefix + timeCode;
+submitBtn.addEventListener("click", async () => {
+  const chosenValues = [];
+  const chosenSummaries = [];
 
-        chosenValues.push(finalValue);
-        chosenSummaries.push(`${card.dataset.location} · ${s.time}`);
-      }
-    });
-
-    // Zablokovat tlačítko, ať nejde odeslat vícekrát, a dát uživateli zpětnou vazbu
-    submitBtn.disabled = true;
-    submitBtn.textContent = "Odesílám…";
-    submitWarning.textContent = "";
-
-    await submitVote(chosenValues);
-
-    cardsWrap.style.display = "none";
-    submitArea.style.display = "none";
-    thankyouDetail.textContent = chosenSummaries.join(" · ");
-    thankyou.classList.add("visible");
+  cardEls.forEach((card, idx) => {
+    const s = state[idx];
+    if (s.interested) {
+      const prefix = card.dataset.location.includes("Barokní") ? "ba" : "ds";
+      const timeCode = s.time.replace(":", "");
+      const finalValue = prefix + timeCode;
+      chosenValues.push(finalValue);
+      chosenSummaries.push(`${card.dataset.location} · ${s.time}`);
+    }
   });
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = "Odesílám…";
+  submitWarning.textContent = "";
+
+  await submitVote(chosenValues);
+
+  cardsWrap.style.display = "none";
+  submitArea.style.display = "none";
+  thankyouDetail.textContent = chosenSummaries.join(" · ");
+  thankyou.classList.add("visible");
+});
 
   function buildParams(values) {
     const params = new URLSearchParams();
