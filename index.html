@@ -37,6 +37,23 @@
     font-family: 'Inter', sans-serif;
     -webkit-font-smoothing: antialiased;
   }
+  
+  body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60vh;
+  min-height: 450px;
+  background-image: 
+    linear-gradient(to bottom, #f2eee600 0%, var(--bg) 95%),
+    url('img/background.jpg');
+  background-size: cover;
+  background-position: center top;
+  z-index: -1;
+  pointer-events: none;
+}
 
   body {
     min-height: 100svh;
@@ -44,6 +61,7 @@
     align-items: center;
     justify-content: center;
     padding: 32px 20px 48px;
+    position: relative;
   }
 
   .page {
